@@ -10,8 +10,11 @@ contract IdentityRegistry is Initializable {
     // Block number when will this registry become deprecated
     uint public deprecatedAfter;
 
-    // list of clues
-    // list of identities
+    // Array of addresses of clues
+    address[] public clues;
+    mapping(address => uint) public cluesIndex;
+
+    // Array of addresses of registry members
 
     /**
      * @dev Event triggered when owner of the index is changed.
@@ -28,8 +31,18 @@ contract IdentityRegistry is Initializable {
      */
     event DeprecationBlockUnset();
 
+    /**
+     * @dev Event triggered when a new clue is registered
+     */
+    event ClueRegistered(address indexed clue);
+    /**
+     * @dev Event triggered when a clue is deleted
+     */
+    event ClueDeleted(address indexed clue);
+
     function initialize(address __owner) public initializer {
         _owner = __owner;
+        clues.length++;
     }
 
     /**
@@ -99,6 +112,46 @@ contract IdentityRegistry is Initializable {
             return 2;
         }
         revert('Uknown state of deprecatedAfter field.');
+    }
+
+    /**
+     * @dev Allows registry owner to add new clue address
+     * @param clue Clue address
+     */
+    function registerClue(address clue) external onlyOwner {
+        require(clue != address(0));
+        cluesIndex[clue] = clues.length;
+        clues.push(clue);
+        emit ClueRegistered(clue);
+    }
+
+    /**
+     * @dev Allows registry owner to remove a clue
+     * @param clue Clue address
+     */
+    function deleteClue(address clue) external onlyOwner {
+        require(clue != address(0));
+        require(cluesIndex[clue] != uint(0));
+        uint index = cluesIndex[clue];
+        delete clues[index];
+        delete cluesIndex[clue];
+        emit ClueDeleted(clue);
+    }
+
+    /**
+     * @dev `getCluesLength` get the length of the `clues` array
+     * @return {" ": "Length of the clues array which might contain zero addresses."}
+     */
+    function getCluesLength() public view returns (uint) {
+        return clues.length;
+    }
+
+    /**
+     * @dev `getClueAddresses` get the `clues` array
+     * @return {" ": "Clues array which might contain zero addresses."}
+     */
+    function getClueAddresses() public view returns (address[] memory) {
+        return clues;
     }
 
 }

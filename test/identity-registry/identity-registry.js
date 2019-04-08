@@ -19,7 +19,6 @@ const mineBlock = async () => {
       {
         jsonrpc: '2.0',
         method: 'evm_mine',
-      // id: id + 1
       }, (e, r) => {
         if (e) { return reject(e); }
         resolve(r);
@@ -27,7 +26,7 @@ const mineBlock = async () => {
   });
 };
 
-contract.only('IdentityRegistry', (accounts) => {
+contract('IdentityRegistry', (accounts) => {
   const registryOwner = accounts[1];
   let project;
   let registry;
@@ -136,5 +135,94 @@ contract.only('IdentityRegistry', (accounts) => {
         assert.match(e.toString(), /cannot unset deprecated after the block happened/i);
       }
     });
+  });
+
+  describe('clues', () => {
+    it('should not be possible to add a clue by a non-owner', async () => {
+      try {
+        await registry.registerClue(accounts[3], { from: accounts[0] });
+        assert(false);
+      } catch (e) {
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
+
+    it('should not be possible to add a clue on a zero address', async () => {
+      try {
+        await registry.registerClue(help.zeroAddress, { from: accounts[0] });
+        assert(false);
+      } catch (e) {
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
+
+    it('should add a clue by an owner and emit', async () => {
+      const receipt = await registry.registerClue(accounts[3], { from: registryOwner });
+      assert.equal(receipt.logs.length, 1);
+      assert.equal(receipt.logs[0].event, 'ClueRegistered');
+      assert.equal(receipt.logs[0].args.clue, accounts[3]);
+      const allClues = await help.jsArrayFromSolidityArray(
+        registry.clues,
+        await registry.getCluesLength(),
+        help.isZeroAddress
+      );
+      assert.equal(allClues.length, 1);
+      assert.equal(allClues[0], accounts[3]);
+      assert.equal(await registry.cluesIndex(accounts[3]), 1);
+    });
+
+    it('should not be possible to remove a clue by a non-owner', async () => {
+      try {
+        await registry.registerClue(accounts[3], { from: registryOwner });
+        await registry.deleteClue(accounts[3], { from: accounts[0] });
+        assert(false);
+      } catch (e) {
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
+
+    it('should not be possible to remove a non-registered clue', async () => {
+      try {
+        await registry.deleteClue(accounts[3], { from: registryOwner });
+        assert(false);
+      } catch (e) {
+        assert(help.isInvalidOpcodeEx(e));
+      }
+    });
+
+    it('should remove a clue by an owner and emit', async () => {
+      await registry.registerClue(accounts[2], { from: registryOwner });
+      await registry.registerClue(accounts[3], { from: registryOwner });
+      const allClues1 = await help.jsArrayFromSolidityArray(
+        registry.clues,
+        await registry.getCluesLength(),
+        help.isZeroAddress
+      );
+      assert.equal(allClues1.length, 2);
+      const receipt = await registry.deleteClue(accounts[2], { from: registryOwner });
+      assert.equal(receipt.logs.length, 1);
+      assert.equal(receipt.logs[0].event, 'ClueDeleted');
+      assert.equal(receipt.logs[0].args.clue, accounts[2]);
+      const allClues = await help.jsArrayFromSolidityArray(
+        registry.clues,
+        await registry.getCluesLength(),
+        help.isZeroAddress
+      );
+      assert.equal(allClues.length, 1);
+      assert.equal(allClues[0], accounts[3]);
+    });
+
+    it('should return list of clue addresses', async () => {
+      await registry.registerClue(accounts[2], { from: registryOwner });
+      await registry.registerClue(accounts[3], { from: registryOwner });
+      const clues = await registry.getClueAddresses();
+      // there's a zero address apart from the registered ones
+      assert.equal(clues.length, 3);
+    });
+
+    // TODO this depends on clues actually getting deployed
+    xit('should return list of clues', async () => {});
+    xit('should not allow to add an address where ther is not a clue interface deployed', async () => {});
+    // TODO interface detection https://github.com/ethereum/EIPs/pull/881
   });
 });
