@@ -1,18 +1,8 @@
 {
   "zosversion": "2.2",
   "name": "wt-contracts",
-  "version": "0.6.1",
-  "publish": true,
+  "version": "0.1.0",
   "contracts": {
-    "WTHotelIndex": "HotelDirectory",
-    "WTAirlineIndex": "AirlineDirectory",
-    "WTAirlineIndexDemo": "AirlineDirectory",
-    "WTHotelIndexDemo": "HotelDirectory",
-    "WTAirlineIndexPlayground": "AirlineDirectory",
-    "WTHotelIndexPlayground": "HotelDirectory",
-    "HotelDirectory": "HotelDirectory",
-    "AirlineDirectory": "AirlineDirectory",
-    "OtaDirectory": "OtaDirectory",
-    "WindingTreeEntrypoint": "WindingTreeEntrypoint"
+    "HotelDirectory": "HotelDirectory"
   }
 }
