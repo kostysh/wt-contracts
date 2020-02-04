@@ -16,6 +16,11 @@ contract AbstractOrganizationFactory {
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     /**
+     * @dev Event triggered when the organization is reporting what its storage has been updated
+     */
+    event OrganizationUpdated(address organization);
+
+    /**
      * @dev Returns the address of the current owner.
      */
     function owner() public view returns (address);

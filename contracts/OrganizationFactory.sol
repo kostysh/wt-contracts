@@ -30,6 +30,16 @@ contract OrganizationFactory is Initializable, AbstractOrganizationFactory {
     mapping(address => uint) _createdOrganizationsIndex;
 
     /**
+     * @dev The method that allowing organization to report about its storage update.
+     * This function will throw an error in case of has been called by 
+     * an unknown organization
+     */
+    function reportUpdated() external {
+        require(_createdOrganizations[_createdOrganizationsIndex[msg.sender]] != msg.sender, "OrganizationFactory: Unknown organization");
+        emit OrganizationUpdated(msg.sender);
+    }
+
+    /**
      * @dev `createOrganization` Create new organization upgradeable contract.
      * The created proxy's owner is **this Factory owner**.
      * The created Organizations's ownership is given to `msg.sender`.
